@@ -1,96 +1,148 @@
-"""
-Heather Lemon
-COMP 4581
-6/6/2022
-Lab 1 - Matrix Multiply
-"""
 
-import math
-import statistics
+import os
 
-import numpy as np
+class Matrix:
 
-"""
-matrix multiply with NxN
-"""
-class Lab1:
+    '''
+    '''
+    def __init__(self, matrix : list[list[int]]):
 
-    def __init__(self, A, B):
-        """
-        Init empty matrix
-        """
-        self.matrixA = A
-        self.matrixB = B
-        self.matrixC = [[0, 0, 0],
-                       [0, 0, 0],
-                       [0, 0, 0]]
+        # separate our two dimensional array into rows and columns for helpers
+        self.columns:list[list[int]] = []
+        self.rows:list[list[int]] = []
+        # each matrix row and column must be the same length
+        # we don't care if they gave us column oriented or a row oriented array at this point
+        xsize:int = 0
+        for row in matrix:
+            if xsize == 0:
+                xsize = len(row)
+                continue
+            if xsize != len(row):
+                raise ValueError("matrix constructor given rows of unequal length")
 
-    def checkDimension(self, A, B):
-        """
-        check that the inner dimesions are the same
-        :param A: matrix A
-        :param B: matrix B
-        :return: True if same, False otherwise
-        """
-        rowsA = len(self.matrixA)
-        columnsA = len(self.matrixA[0])
-        rowsB = len(self.matrixB)
-        columnsB = len(self.matrixB[0])
-        if columnsA == rowsB:
-            return True
-        else:
-            return False
+        # split the two dimensional into rows and columns as it will be easier to work with
+        for row in matrix:
+            self.rows.append(row)
+            if len(self.columns) == 0:
+                for i in range(0, len(row)):
+                    col = [row[i] for row in matrix]
+                    self.columns.append(col)
 
-    def printMatrixA(self):
-        """
-        pretty print matrix A
-        :return: None
-        """
-        for row in self.matrixA:
-            print(row)
+        self.matrix:list[list[int]] = matrix
 
-    def printMatrixB(self):
-        """
-        pretty print matrix B
-        :return: None
-        """
-        for row in self.matrixB:
-            print(row)
+    '''
+    '''
+    def getMatrix(self) -> list[list[int]]:
+        return self.matrix
+    
+    '''
+    '''
+    def getRows(self) -> list[list[int]]:
+        return self.rows
 
-    def printMatrixC(self):
-        """
-        pretty print matrix C
-        :return: None
-        """
-        for row in self.matrixC:
-            print(row)
+    '''
+    '''
+    def getColumns(self) -> list[list[int]]:
+        return self.columns
 
-    def matrixMult(self, A, B):
-        print("start matrix multiply")
-        C = np.dot(A,B)
-        # print(C)
-        # self.printMatrixA()
-        # self.printMatrixB()
-        # rows of A
-        for A_index in A:
-            # cols of B
-            for B_index in B:
-                matrix_sum = 0
-                c = matrix_sum + A[0:] * B[:, 0]
-            C_index[A_index, B_index] = c
-        return self.matrixC
+    '''
+    '''
+    def checkConstraints(self, other : 'Matrix'):
+        # this matrix column length must equal the row length of the second matrix
+        cols = len(self.getColumns())
+        rows = len(other.getRows())
+        if cols != rows:
+            print("constraints failed for self columns length " + str(cols) + " not equal to argument rows of length " + str(rows))
+            os._exit(1)
 
-if __name__ == '__main__':
-    A = [[2, -3, 3],
-         [-2, 6, 5],
-         [4, 7, 8]]
-    B = [[-1, 9, 1],
-         [0, 6, 5],
-         [3, 4, 7]]
-    lab1 = Lab1(A, B)
-    isTrue = lab1.checkDimension(A, B)
-    if isTrue:
-        lab1.matrixMult(A, B)
-    else:
-        print("Cannot multiply matrix A x B as the inner dimensions "
-              "are not the same size.")
+    '''
+    '''
+    def multiply(self, other : 'Matrix') -> 'Matrix':
+        self.checkConstraints(other)
+
+        # helpers
+        firstRows : list[int] = self.getRows()
+        firstColumns : list[int] = self.getColumns()
+        secondColumns : list[int] = other.getColumns()
+        
+        resArr : list[list[int]] = []
+        for idx1 in range(0, len(firstRows)):
+            rowContent : list[int] = []
+            # idx corresponds to first column, or second row
+            for idx2 in range(0, len(secondColumns)):
+                value : int = 0
+                for idx3 in range(0, len(firstColumns)):
+                    aval = self.getMatrix()[idx1][idx3]
+                    bval = other.getMatrix()[idx3][idx2]
+                    value += aval * bval
+                rowContent.append(value)
+            resArr.append(rowContent)
+
+        return Matrix(resArr)
+
+        
+    def __str__(self):
+        s : str = ""
+        # tabs look nicer
+        for row in self.getRows():
+            s += "[\t"
+            for vIdx, v in enumerate(row):
+                s += str(v)
+                if vIdx == len(row) - 1:
+                    s += "\t]" + os.linesep
+                else:
+                    # for commas
+                    # s += ",\t"
+                    s +="\t"
+        return s
+
+def test1():
+    A = Matrix([
+        [2,-3,3],
+        [-2,6,5],
+        [4,7,8]
+        ])
+    B = Matrix([
+        [-1,9,1],
+        [0,6,5],
+        [3,4,7]
+        ])
+    return (A,B)
+
+def test2():
+    A = Matrix([
+        [2,-3,3,0],
+        [-2,6,5,1],
+        [4,7,8,2]
+        ])
+    B = Matrix([
+        [-1,9,1],
+        [0,6,5],
+        [3,4,7]
+        ])
+    return (A,B)
+
+def test3():
+    A = Matrix([
+        [2,-3,3,5],
+        [-2,6,5,-2]
+        ])
+    B = Matrix([
+        [-1,9,1],
+        [0,6,5],
+        [3,4,7],
+        [1,2,3]
+        ])
+    return (A,B)
+
+def main():
+    test = test3()
+    result = test[0].multiply(test[1])
+    print(test[0])
+    print( "\t\t*")
+    print(test[1])
+    print( "\t\t=")
+    print(result)
+
+if __name__ == "__main__":
+    main()
